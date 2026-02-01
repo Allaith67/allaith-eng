@@ -4,6 +4,7 @@
 import { Task, TaskStatus } from '@/types/task';
 import TaskCard from './TaskCard';
 import { useState } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskColumnProps {
   status: TaskStatus;
@@ -33,6 +34,7 @@ const statusColors: Record<TaskStatus, { bg: string; text: string; icon: string 
 };
 
 export default function TaskColumn({ status, title, tasks, onEdit, onDelete, onDrop }: TaskColumnProps) {
+  const { t } = useLanguage();
   const [isDragOver, setIsDragOver] = useState(false);
   const colors = statusColors[status];
 
@@ -87,8 +89,8 @@ export default function TaskColumn({ status, title, tasks, onEdit, onDelete, onD
         <div className="space-y-4">
           {tasks.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="text-lg">لا توجد مهام هنا</p>
-              <p className="text-sm mt-2">اسحب المهام إلى هذا العمود</p>
+              <p className="text-lg">{t('noTasks')}</p>
+              <p className="text-sm mt-2">{t('dragTasks')}</p>
             </div>
           ) : (
             tasks.map(task => (

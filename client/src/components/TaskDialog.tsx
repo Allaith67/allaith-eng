@@ -22,6 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ interface TaskDialogProps {
 }
 
 export default function TaskDialog({ open, onOpenChange, task, onSave, onUpdate, users }: TaskDialogProps) {
+  const { t } = useLanguage();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
@@ -91,22 +93,22 @@ export default function TaskDialog({ open, onOpenChange, task, onSave, onUpdate,
       <DialogContent className="glass-card border-white/20 sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl text-foreground">
-            {task ? 'تعديل المهمة' : 'إضافة مهمة جديدة'}
+            {task ? t('editTask') : t('addNewTask')}
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            {task ? 'قم بتعديل تفاصيل المهمة' : 'أدخل تفاصيل المهمة الجديدة'}
+            {task ? t('editTaskDetails') : t('enterNewTaskDetails')}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-foreground">عنوان المهمة</Label>
+            <Label htmlFor="title" className="text-foreground">{t('taskTitle')}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="أدخل عنوان المهمة"
+              placeholder={t('enterTaskTitle')}
               className="glass-card border-white/20 text-foreground placeholder:text-muted-foreground"
               required
             />
@@ -114,12 +116,12 @@ export default function TaskDialog({ open, onOpenChange, task, onSave, onUpdate,
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-foreground">الوصف</Label>
+            <Label htmlFor="description" className="text-foreground">{t('description')}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="أدخل وصف المهمة"
+              placeholder={t('enterTaskDescription')}
               className="glass-card border-white/20 text-foreground placeholder:text-muted-foreground min-h-[100px]"
               required
             />
@@ -127,37 +129,37 @@ export default function TaskDialog({ open, onOpenChange, task, onSave, onUpdate,
 
           {/* Priority */}
           <div className="space-y-2">
-            <Label htmlFor="priority" className="text-foreground">الأولوية</Label>
+            <Label htmlFor="priority" className="text-foreground">{t('priority')}</Label>
             <Select value={priority} onValueChange={(value) => setPriority(value as TaskPriority)}>
               <SelectTrigger className="glass-card border-white/20 text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="glass-card border-white/20">
-                <SelectItem value="low">منخفضة</SelectItem>
-                <SelectItem value="medium">متوسطة</SelectItem>
-                <SelectItem value="high">عالية</SelectItem>
+                <SelectItem value="low">{t('low')}</SelectItem>
+                <SelectItem value="medium">{t('medium')}</SelectItem>
+                <SelectItem value="high">{t('high')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Status */}
           <div className="space-y-2">
-            <Label htmlFor="status" className="text-foreground">الحالة</Label>
+            <Label htmlFor="status" className="text-foreground">{t('status')}</Label>
             <Select value={status} onValueChange={(value) => setStatus(value as TaskStatus)}>
               <SelectTrigger className="glass-card border-white/20 text-foreground">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="glass-card border-white/20">
-                <SelectItem value="todo">قيد الانتظار</SelectItem>
-                <SelectItem value="in-progress">قيد التنفيذ</SelectItem>
-                <SelectItem value="done">مكتملة</SelectItem>
+                <SelectItem value="todo">{t('todo')}</SelectItem>
+                <SelectItem value="in-progress">{t('inProgress')}</SelectItem>
+                <SelectItem value="done">{t('done')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Assigned User */}
           <div className="space-y-2">
-            <Label htmlFor="user" className="text-foreground">المستخدم المعين</Label>
+            <Label htmlFor="user" className="text-foreground">{t('assignedUser')}</Label>
             <Select value={assignedUser} onValueChange={setAssignedUser}>
               <SelectTrigger className="glass-card border-white/20 text-foreground">
                 <SelectValue />
@@ -170,20 +172,20 @@ export default function TaskDialog({ open, onOpenChange, task, onSave, onUpdate,
             </Select>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
               className="hover:bg-white/10"
             >
-              إلغاء
+              {t('cancel')}
             </Button>
             <Button
               type="submit"
               className="bg-blue-500 hover:bg-blue-600 text-white glow-effect"
             >
-              {task ? 'حفظ التعديلات' : 'إضافة المهمة'}
+              {task ? t('saveChanges') : t('addTask')}
             </Button>
           </DialogFooter>
         </form>

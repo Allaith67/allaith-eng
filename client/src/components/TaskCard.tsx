@@ -4,6 +4,7 @@
 import { Task, TaskPriority } from '@/types/task';
 import { Button } from '@/components/ui/button';
 import { Pencil, Trash2, User } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskCardProps {
   task: Task;
@@ -30,14 +31,15 @@ const priorityColors: Record<TaskPriority, { border: string; glow: string; text:
   }
 };
 
-const priorityLabels: Record<TaskPriority, string> = {
-  low: 'منخفضة',
-  medium: 'متوسطة',
-  high: 'عالية'
-};
-
 export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCardProps) {
+  const { t, isRTL } = useLanguage();
   const colors = priorityColors[task.priority];
+
+  const priorityLabels: Record<TaskPriority, string> = {
+    low: t('low'),
+    medium: t('medium'),
+    high: t('high')
+  };
 
   return (
     <div
@@ -66,7 +68,7 @@ export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCar
       {/* Priority Badge */}
       <div className="flex items-center justify-between mb-3">
         <span className={`text-xs font-medium px-3 py-1 rounded-full ${colors.text} bg-white/5 backdrop-blur-sm`}>
-          الأولوية: {priorityLabels[task.priority]}
+          {t('priorityLabel')}: {priorityLabels[task.priority]}
         </span>
       </div>
 
@@ -84,8 +86,8 @@ export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCar
           onClick={() => onEdit(task)}
           className="flex-1 hover:bg-white/10 hover:text-blue-400 transition-colors"
         >
-          <Pencil className="w-4 h-4 mr-2" />
-          تعديل
+          <Pencil className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+          {t('edit')}
         </Button>
         <Button
           variant="ghost"
@@ -93,8 +95,8 @@ export default function TaskCard({ task, onEdit, onDelete, isDragging }: TaskCar
           onClick={() => onDelete(task.id)}
           className="flex-1 hover:bg-white/10 hover:text-pink-400 transition-colors"
         >
-          <Trash2 className="w-4 h-4 mr-2" />
-          حذف
+          <Trash2 className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+          {t('delete')}
         </Button>
       </div>
     </div>

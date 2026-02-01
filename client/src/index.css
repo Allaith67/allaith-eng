@@ -42,8 +42,8 @@
   --color-sidebar-ring: var(--sidebar-ring);
   
   /* Custom font families for Kinetic Glass Morphism */
-  --font-display: 'Outfit', system-ui, sans-serif;
-  --font-body: 'Manrope', system-ui, sans-serif;
+  --font-display: 'Outfit', 'Cairo', system-ui, sans-serif;
+  --font-body: 'Manrope', 'Cairo', system-ui, sans-serif;
 }
 
 /* Kinetic Glass Morphism Theme - Deep navy to violet gradient with luminous accents */

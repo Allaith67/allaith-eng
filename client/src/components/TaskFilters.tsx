@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TaskFiltersProps {
   filters: TaskFiltersType;
@@ -28,6 +29,7 @@ export default function TaskFilters({
   onSearchChange,
   users 
 }: TaskFiltersProps) {
+  const { t, isRTL } = useLanguage();
   
   const handlePriorityChange = (value: string) => {
     if (value === 'all') {
@@ -57,13 +59,13 @@ export default function TaskFilters({
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Search Input */}
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+          <Search className={`absolute ${isRTL ? 'right-3' : 'left-3'} top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground`} />
           <Input
             type="text"
-            placeholder="ابحث عن مهمة..."
+            placeholder={t('searchPlaceholder')}
             value={searchInput}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="glass-card border-white/20 text-foreground placeholder:text-muted-foreground pl-10"
+            className={`glass-card border-white/20 text-foreground placeholder:text-muted-foreground ${isRTL ? 'pr-10' : 'pl-10'}`}
           />
         </div>
 
@@ -74,13 +76,13 @@ export default function TaskFilters({
             onValueChange={handlePriorityChange}
           >
             <SelectTrigger className="glass-card border-white/20 text-foreground">
-              <SelectValue placeholder="الأولوية" />
+              <SelectValue placeholder={t('priority')} />
             </SelectTrigger>
             <SelectContent className="glass-card border-white/20">
-              <SelectItem value="all">كل الأولويات</SelectItem>
-              <SelectItem value="low">منخفضة</SelectItem>
-              <SelectItem value="medium">متوسطة</SelectItem>
-              <SelectItem value="high">عالية</SelectItem>
+              <SelectItem value="all">{t('allPriorities')}</SelectItem>
+              <SelectItem value="low">{t('low')}</SelectItem>
+              <SelectItem value="medium">{t('medium')}</SelectItem>
+              <SelectItem value="high">{t('high')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -92,10 +94,10 @@ export default function TaskFilters({
             onValueChange={handleUserChange}
           >
             <SelectTrigger className="glass-card border-white/20 text-foreground">
-              <SelectValue placeholder="المستخدم" />
+              <SelectValue placeholder={t('userFilter')} />
             </SelectTrigger>
             <SelectContent className="glass-card border-white/20">
-              <SelectItem value="all">كل المستخدمين</SelectItem>
+              <SelectItem value="all">{t('allUsers')}</SelectItem>
               {users.map(user => (
                 <SelectItem key={user} value={user}>{user}</SelectItem>
               ))}
@@ -110,8 +112,8 @@ export default function TaskFilters({
             onClick={clearFilters}
             className="hover:bg-white/10 text-pink-400 hover:text-pink-300"
           >
-            <X className="w-4 h-4 mr-2" />
-            مسح الفلاتر
+            <X className={`w-4 h-4 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+            {t('clearFilters')}
           </Button>
         )}
       </div>

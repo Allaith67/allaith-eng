@@ -10,8 +10,11 @@ import TaskDialog from '@/components/TaskDialog';
 import TaskFilters from '@/components/TaskFilters';
 import { Task, TaskStatus } from '@/types/task';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 export default function Home() {
+  const { t } = useLanguage();
   const {
     tasksByStatus,
     uniqueUsers,
@@ -62,28 +65,28 @@ export default function Home() {
 
   const handleDeleteTask = (id: string) => {
     deleteTask(id);
-    toast.success('تم حذف المهمة بنجاح', {
+    toast.success(t('taskDeleted'), {
       icon: '🗑️'
     });
   };
 
   const handleSaveTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt'>) => {
     addTask(taskData);
-    toast.success('تم إضافة المهمة بنجاح', {
+    toast.success(t('taskAdded'), {
       icon: '✓'
     });
   };
 
   const handleUpdateTask = (id: string, updates: Partial<Task>) => {
     updateTask(id, updates);
-    toast.success('تم تحديث المهمة بنجاح', {
+    toast.success(t('taskUpdated'), {
       icon: '✓'
     });
   };
 
   const handleDrop = (taskId: string, newStatus: TaskStatus) => {
     moveTask(taskId, newStatus);
-    toast.success('تم نقل المهمة بنجاح', {
+    toast.success(t('taskMoved'), {
       icon: '🎯'
     });
   };
@@ -129,18 +132,22 @@ export default function Home() {
                 </div>
                 <div>
                   <h1 className="font-display text-4xl font-bold text-foreground bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    ALLAITH eng
+                    {t('appName')}
                   </h1>
-                  <p className="text-muted-foreground mt-1">لوحة إدارة المهام التعاونية</p>
+                  <p className="text-muted-foreground mt-1">{t('appSubtitle')}</p>
                 </div>
               </div>
-              <Button
-                onClick={handleAddTask}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white glow-effect px-6 py-6 text-lg"
-              >
-                <Plus className="w-5 h-5 mr-2" />
-                إضافة مهمة جديدة
-              </Button>
+              
+              <div className="flex items-center gap-4">
+                <LanguageToggle />
+                <Button
+                  onClick={handleAddTask}
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white glow-effect px-6 py-6 text-lg"
+                >
+                  <Plus className="w-5 h-5 mr-2" />
+                  {t('addNewTask')}
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -159,7 +166,7 @@ export default function Home() {
           <div className="flex flex-col lg:flex-row gap-6 overflow-x-auto">
             <TaskColumn
               status="todo"
-              title="قيد الانتظار"
+              title={t('todo')}
               tasks={tasksByStatus.todo}
               onEdit={handleEditTask}
               onDelete={handleDeleteTask}
@@ -167,7 +174,7 @@ export default function Home() {
             />
             <TaskColumn
               status="in-progress"
-              title="قيد التنفيذ"
+              title={t('inProgress')}
               tasks={tasksByStatus['in-progress']}
               onEdit={handleEditTask}
               onDelete={handleDeleteTask}
@@ -175,7 +182,7 @@ export default function Home() {
             />
             <TaskColumn
               status="done"
-              title="مكتملة"
+              title={t('done')}
               tasks={tasksByStatus.done}
               onEdit={handleEditTask}
               onDelete={handleDeleteTask}
@@ -188,7 +195,7 @@ export default function Home() {
         <footer className="container py-8">
           <div className="glass-card rounded-xl p-4 border border-white/10 text-center">
             <p className="text-muted-foreground text-sm">
-              © 2026 ALLAITH eng - جميع الحقوق محفوظة
+              © 2026 {t('appName')} - {t('allRightsReserved')}
             </p>
           </div>
         </footer>
