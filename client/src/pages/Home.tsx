@@ -8,6 +8,16 @@ import { useTasks } from '@/hooks/useTasks';
 import TaskColumn from '@/components/TaskColumn';
 import TaskDialog from '@/components/TaskDialog';
 import TaskFilters from '@/components/TaskFilters';
+import ContactForm from '@/components/ContactForm';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { MessageCircle } from 'lucide-react';
 import { Task, TaskStatus } from '@/types/task';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -29,6 +39,7 @@ export default function Home() {
   } = useTasks();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isContactOpen, setIsContactOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   // Simulate real-time updates from other users
@@ -140,6 +151,30 @@ export default function Home() {
               
               <div className="flex items-center gap-4">
                 <LanguageToggle />
+                
+                <Dialog open={isContactOpen} onOpenChange={setIsContactOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="glass-card border-white/20 hover:bg-white/10 text-foreground px-6 py-6 text-lg"
+                    >
+                      <MessageCircle className="w-5 h-5 mr-2 text-blue-400" />
+                      تواصل معنا
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[500px] glass-card border-white/10 bg-black/40 backdrop-blur-xl text-foreground">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                        أرسل لنا رسالة
+                      </DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
+                        املأ النموذج أدناه وسنقوم بالرد عليك في أقرب وقت ممكن.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <ContactForm onSuccess={() => setIsContactOpen(false)} />
+                  </DialogContent>
+                </Dialog>
+
                 <Button
                   onClick={handleAddTask}
                   className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white glow-effect px-6 py-6 text-lg"
