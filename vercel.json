@@ -3,14 +3,6 @@
   "devCommand": "pnpm dev",
   "installCommand": "pnpm install --no-frozen-lockfile",
   "framework": "vite",
-  "env": {
-    "EMAIL_USER": {
-      "description": "Gmail address for sending contact form emails"
-    },
-    "EMAIL_PASS": {
-      "description": "Gmail App Password (generate from Google Account Security settings)"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
