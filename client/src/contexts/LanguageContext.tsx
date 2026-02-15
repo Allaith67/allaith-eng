@@ -173,6 +173,74 @@ export const translations: Translations = {
   goHome: {
     ar: 'العودة للرئيسية',
     en: 'Go Home'
+  },
+  contactUs: {
+    ar: 'تواصل معنا',
+    en: 'Contact Us'
+  },
+  sendMessage: {
+    ar: 'أرسل لنا رسالة',
+    en: 'Send us a message'
+  },
+  fillForm: {
+    ar: 'املأ النموذج أدناه وسنقوم بالرد عليك في أقرب وقت ممكن.',
+    en: 'Fill out the form below and we will get back to you as soon as possible.'
+  },
+  fullName: {
+    ar: 'الاسم الكامل',
+    en: 'Full Name'
+  },
+  namePlaceholder: {
+    ar: 'أدخل اسمك هنا',
+    en: 'Enter your name here'
+  },
+  email: {
+    ar: 'البريد الإلكتروني',
+    en: 'Email Address'
+  },
+  phone: {
+    ar: 'رقم الهاتف',
+    en: 'Phone Number'
+  },
+  message: {
+    ar: 'الرسالة',
+    en: 'Message'
+  },
+  messagePlaceholder: {
+    ar: 'كيف يمكننا مساعدتك؟',
+    en: 'How can we help you?'
+  },
+  sending: {
+    ar: 'جاري الإرسال...',
+    en: 'Sending...'
+  },
+  sendButton: {
+    ar: 'إرسال الرسالة',
+    en: 'Send Message'
+  },
+  successMessage: {
+    ar: 'تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.',
+    en: 'Your message has been sent successfully! We will contact you soon.'
+  },
+  errorMessage: {
+    ar: 'حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.',
+    en: 'An error occurred while sending the message. Please try again.'
+  },
+  nameError: {
+    ar: 'الاسم يجب أن يكون أكثر من حرفين',
+    en: 'Name must be more than 2 characters'
+  },
+  emailError: {
+    ar: 'يرجى إدخال بريد إلكتروني صحيح',
+    en: 'Please enter a valid email address'
+  },
+  phoneError: {
+    ar: 'يرجى إدخال رقم هاتف صحيح',
+    en: 'Please enter a valid phone number'
+  },
+  messageError: {
+    ar: 'الرسالة يجب أن تكون 10 أحرف على الأقل',
+    en: 'Message must be at least 10 characters'
   }
 };
 

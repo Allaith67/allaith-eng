@@ -159,16 +159,16 @@ export default function Home() {
                       className="glass-card border-white/20 hover:bg-white/10 text-foreground px-6 py-6 text-lg"
                     >
                       <MessageCircle className="w-5 h-5 mr-2 text-blue-400" />
-                      تواصل معنا
+                      {t('contactUs')}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-[500px] glass-card border-white/10 bg-black/40 backdrop-blur-xl text-foreground">
                     <DialogHeader>
                       <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                        أرسل لنا رسالة
+                        {t('sendMessage')}
                       </DialogTitle>
                       <DialogDescription className="text-muted-foreground">
-                        املأ النموذج أدناه وسنقوم بالرد عليك في أقرب وقت ممكن.
+                        {t('fillForm')}
                       </DialogDescription>
                     </DialogHeader>
                     <ContactForm onSuccess={() => setIsContactOpen(false)} />

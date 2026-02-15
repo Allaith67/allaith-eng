@@ -17,20 +17,16 @@ import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Send, User, Mail, Phone, MessageSquare } from 'lucide-react';
 
-const formSchema = z.object({
-  name: z.string().min(2, { message: 'الاسم يجب أن يكون أكثر من حرفين' }),
-  email: z.string().email({ message: 'يرجى إدخال بريد إلكتروني صحيح' }),
-  phone: z.string().min(5, { message: 'يرجى إدخال رقم هاتف صحيح' }),
-  message: z.string().min(10, { message: 'الرسالة يجب أن تكون 10 أحرف على الأقل' }),
-});
-
-interface ContactFormProps {
-  onSuccess?: () => void;
-}
-
-export default function ContactForm({ onSuccess }: ContactFormProps) {
+export default function ContactForm({ onSuccess }: { onSuccess?: () => void }) {
   const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const formSchema = z.object({
+    name: z.string().min(2, { message: t('nameError') }),
+    email: z.string().email({ message: t('emailError') }),
+    phone: z.string().min(5, { message: t('phoneError') }),
+    message: z.string().min(10, { message: t('messageError') }),
+  });
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,16 +50,16 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
       });
 
       if (response.ok) {
-        toast.success('تم إرسال رسالتك بنجاح! سنتواصل معك قريباً.', {
+        toast.success(t('successMessage'), {
           icon: '🚀',
         });
         form.reset();
         if (onSuccess) onSuccess();
       } else {
-        throw new Error('فشل إرسال الرسالة');
+        throw new Error('Failed to send');
       }
     } catch (error) {
-      toast.error('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.', {
+      toast.error(t('errorMessage'), {
         icon: '❌',
       });
     } finally {
@@ -82,10 +78,10 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
               <FormItem>
                 <FormLabel className="flex items-center gap-2">
                   <User className="w-4 h-4 text-blue-400" />
-                  الاسم الكامل
+                  {t('fullName')}
                 </FormLabel>
                 <FormControl>
-                  <Input placeholder="أدخل اسمك هنا" {...field} className="glass-input" />
+                  <Input placeholder={t('namePlaceholder')} {...field} className="glass-input" />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -100,7 +96,7 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-purple-400" />
-                    البريد الإلكتروني
+                    {t('email')}
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="example@mail.com" {...field} className="glass-input" />
@@ -117,7 +113,7 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
                 <FormItem>
                   <FormLabel className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-green-400" />
-                    رقم الهاتف
+                    {t('phone')}
                   </FormLabel>
                   <FormControl>
                     <Input placeholder="+963..." {...field} className="glass-input" />
@@ -135,11 +131,11 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
               <FormItem>
                 <FormLabel className="flex items-center gap-2">
                   <MessageSquare className="w-4 h-4 text-pink-400" />
-                  الرسالة
+                  {t('message')}
                 </FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="كيف يمكننا مساعدتك؟" 
+                    placeholder={t('messagePlaceholder')} 
                     className="min-h-[120px] glass-input" 
                     {...field} 
                   />
@@ -157,12 +153,12 @@ export default function ContactForm({ onSuccess }: ContactFormProps) {
             {isSubmitting ? (
               <span className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                جاري الإرسال...
+                {t('sending')}
               </span>
             ) : (
               <span className="flex items-center gap-2">
                 <Send className="w-5 h-5" />
-                إرسال الرسالة
+                {t('sendButton')}
               </span>
             )}
           </Button>
