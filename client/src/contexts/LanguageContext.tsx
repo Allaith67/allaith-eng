@@ -241,6 +241,14 @@ export const translations: Translations = {
   messageError: {
     ar: 'الرسالة يجب أن تكون 10 أحرف على الأقل',
     en: 'Message must be at least 10 characters'
+  },
+  yourMessage: {
+    ar: 'رسالتك',
+    en: 'Your Message'
+  },
+  sendNewMessage: {
+    ar: 'إرسال رسالة جديدة',
+    en: 'Send New Message'
   }
 };
 

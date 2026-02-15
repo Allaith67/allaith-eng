@@ -9,6 +9,7 @@ import TaskColumn from '@/components/TaskColumn';
 import TaskDialog from '@/components/TaskDialog';
 import TaskFilters from '@/components/TaskFilters';
 import ContactForm from '@/components/ContactForm';
+import FloatingChat from '@/components/FloatingChat';
 import {
   Dialog,
   DialogContent,
@@ -245,6 +246,9 @@ export default function Home() {
         onUpdate={handleUpdateTask}
         users={uniqueUsers}
       />
+
+      {/* Floating Chat Widget */}
+      <FloatingChat />
     </div>
   );
 }
