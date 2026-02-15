@@ -1,97 +1,112 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { MessageCircle, X, Send, Loader } from 'lucide-react';
+import { MessageCircle, X, Send, Loader, User } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
+  sender: 'visitor' | 'admin';
+  text: string;
+  timestamp: string;
+}
+
+interface Conversation {
+  id: string;
   visitorName: string;
-  visitorEmail: string;
-  visitorPhone: string;
-  visitorMessage: string;
-  adminReply?: string;
-  createdAt: string;
-  repliedAt?: string;
-  status: 'unread' | 'read' | 'replied';
+  messages: ChatMessage[];
 }
 
 export default function FloatingChat() {
   const { t, isRTL } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMessage, setCurrentMessage] = useState<ChatMessage | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [inputText, setInputText] = useState('');
+  const [showInfoForm, setShowInfoForm] = useState(true);
+  const [visitorInfo, setVisitorInfo] = useState({ name: '', email: '', phone: '' });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Check if there's a stored message ID to show reply
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
-    const storedMessageId = localStorage.getItem('lastMessageId');
-    if (storedMessageId && isOpen) {
-      checkForReply(storedMessageId);
-    }
-  }, [isOpen]);
+    scrollToBottom();
+  }, [conversation?.messages, isOpen]);
 
-  const checkForReply = async (messageId: string) => {
+  useEffect(() => {
+    const savedId = localStorage.getItem('chat_conv_id');
+    const savedInfo = localStorage.getItem('chat_visitor_info');
+    if (savedId) {
+      fetchConversation(savedId);
+      setShowInfoForm(false);
+    }
+    if (savedInfo) {
+      setVisitorInfo(JSON.parse(savedInfo));
+    }
+  }, []);
+
+  // Poll for new messages when open
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isOpen && conversation?.id) {
+      interval = setInterval(() => fetchConversation(conversation.id), 3000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, conversation?.id]);
+
+  const fetchConversation = async (id: string) => {
     try {
-      const response = await fetch(`/api/messages?password=${process.env.REACT_APP_ADMIN_PASSWORD}`);
+      const response = await fetch(`/api/messages?conversationId=${id}`);
       if (response.ok) {
-        const messages: ChatMessage[] = await response.json();
-        const message = messages.find(m => m.id === messageId);
-        if (message) {
-          setCurrentMessage(message);
-        }
+        const data = await response.json();
+        setConversation(data);
       }
     } catch (error) {
-      console.error('Error checking for reply:', error);
+      console.error('Error fetching chat:', error);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleStartChat = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.email || !formData.message) {
+    if (!visitorInfo.name || !visitorInfo.email) {
       toast.error(t('errorMessage'));
       return;
     }
+    const newId = 'conv_' + Date.now();
+    localStorage.setItem('chat_conv_id', newId);
+    localStorage.setItem('chat_visitor_info', JSON.stringify(visitorInfo));
+    setConversation({ id: newId, visitorName: visitorInfo.name, messages: [] });
+    setShowInfoForm(false);
+  };
 
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inputText.trim() || !conversation) return;
+
+    const messageText = inputText;
+    setInputText('');
     setIsLoading(true);
+
     try {
       const response = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          visitorName: formData.name,
-          visitorEmail: formData.email,
-          visitorPhone: formData.phone,
-          visitorMessage: formData.message,
+          conversationId: conversation.id,
+          visitorName: visitorInfo.name,
+          visitorEmail: visitorInfo.email,
+          visitorPhone: visitorInfo.phone,
+          text: messageText,
+          sender: 'visitor',
         }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('lastMessageId', data.messageId);
-        toast.success(t('successMessage'));
-        setFormData({ name: '', email: '', phone: '', message: '' });
-        
-        // Show confirmation message
-        setTimeout(() => {
-          setCurrentMessage({
-            id: data.messageId,
-            visitorName: formData.name,
-            visitorEmail: formData.email,
-            visitorPhone: formData.phone,
-            visitorMessage: formData.message,
-            createdAt: new Date().toISOString(),
-            status: 'unread',
-          });
-        }, 500);
+        const updatedConv = await response.json();
+        setConversation(updatedConv);
       }
     } catch (error) {
       toast.error(t('errorMessage'));
@@ -102,113 +117,75 @@ export default function FloatingChat() {
 
   return (
     <>
-      {/* Floating Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed ${isRTL ? 'left-6' : 'right-6'} bottom-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center glow-effect`}
-        title={t('contactUs')}
+        className={`fixed ${isRTL ? 'left-6' : 'right-6'} bottom-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg flex items-center justify-center glow-effect transition-transform hover:scale-110`}
       >
-        {isOpen ? (
-          <X className="w-6 h-6" />
-        ) : (
-          <MessageCircle className="w-6 h-6" />
-        )}
+        {isOpen ? <X /> : <MessageCircle />}
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <div
-          className={`fixed ${isRTL ? 'left-6' : 'right-6'} bottom-24 z-40 w-96 max-w-[calc(100vw-2rem)] bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-2xl border border-white/10 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300`}
-        >
-          {/* Header */}
-          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white">
-            <h3 className="font-bold text-lg">{t('sendMessage')}</h3>
-            <p className="text-sm text-blue-100">{t('fillForm')}</p>
+        <div className={`fixed ${isRTL ? 'left-6' : 'right-6'} bottom-24 z-50 w-80 h-[450px] bg-slate-900 rounded-2xl shadow-2xl border border-white/10 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4`}>
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4 text-white flex justify-between items-center">
+            <div>
+              <h3 className="font-bold">{t('contactUs')}</h3>
+              <p className="text-xs opacity-80">{conversation ? 'متصل الآن' : 'سنجيبك قريباً'}</p>
+            </div>
+            <User className="w-5 h-5 opacity-50" />
           </div>
 
-          {/* Content */}
-          <div className="p-4 max-h-96 overflow-y-auto">
-            {currentMessage && currentMessage.status === 'replied' ? (
-              // Show reply
-              <div className="space-y-4">
-                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-blue-400 mb-2">{t('yourMessage')}:</p>
-                  <p className="text-sm text-gray-300">{currentMessage.visitorMessage}</p>
-                </div>
-                <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3">
-                  <p className="text-sm font-semibold text-purple-400 mb-2">الرد:</p>
-                  <p className="text-sm text-gray-300">{currentMessage.adminReply}</p>
-                </div>
-                <Button
-                  onClick={() => {
-                    setCurrentMessage(null);
-                    setFormData({ name: '', email: '', phone: '', message: '' });
-                    localStorage.removeItem('lastMessageId');
-                  }}
-                  className="w-full bg-blue-500 hover:bg-blue-600"
-                >
-                  {t('sendNewMessage')}
-                </Button>
-              </div>
-            ) : (
-              // Show form
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">{t('fullName')}</label>
-                  <Input
-                    type="text"
-                    placeholder={t('namePlaceholder')}
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">{t('email')}</label>
-                  <Input
-                    type="email"
-                    placeholder="example@mail.com"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">{t('phone')}</label>
-                  <Input
-                    type="tel"
-                    placeholder="+963..."
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-400"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm text-gray-300 block mb-1">{t('message')}</label>
-                  <Textarea
-                    placeholder={t('messagePlaceholder')}
-                    value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                    className="bg-slate-700 border-slate-600 text-white placeholder-gray-400 min-h-[80px]"
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
-                >
-                  {isLoading ? (
-                    <Loader className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4 mr-2" />
-                      {t('sendButton')}
-                    </>
-                  )}
-                </Button>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-900/50">
+            {showInfoForm ? (
+              <form onSubmit={handleStartChat} className="space-y-3 pt-4">
+                <Input 
+                  placeholder={t('fullName')} 
+                  value={visitorInfo.name} 
+                  onChange={e => setVisitorInfo({...visitorInfo, name: e.target.value})}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+                <Input 
+                  placeholder={t('email')} 
+                  type="email"
+                  value={visitorInfo.email} 
+                  onChange={e => setVisitorInfo({...visitorInfo, email: e.target.value})}
+                  className="bg-slate-800 border-slate-700 text-white"
+                />
+                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">{t('sendButton')}</Button>
               </form>
+            ) : (
+              <>
+                {conversation?.messages.map((msg) => (
+                  <div key={msg.id} className={`flex ${msg.sender === 'visitor' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${
+                      msg.sender === 'visitor' 
+                        ? 'bg-blue-600 text-white rounded-br-none' 
+                        : 'bg-slate-700 text-gray-100 rounded-bl-none'
+                    }`}>
+                      {msg.text}
+                      <p className="text-[10px] opacity-50 mt-1 text-right">
+                        {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div ref={messagesEndRef} />
+              </>
             )}
           </div>
+
+          {!showInfoForm && (
+            <form onSubmit={handleSendMessage} className="p-3 bg-slate-800 border-t border-white/5 flex gap-2">
+              <Input
+                placeholder="اكتب رسالتك..."
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                className="bg-slate-900 border-none text-white focus-visible:ring-0"
+              />
+              <Button size="icon" disabled={isLoading} className="bg-blue-600 shrink-0">
+                {isLoading ? <Loader className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              </Button>
+            </form>
+          )}
         </div>
       )}
     </>

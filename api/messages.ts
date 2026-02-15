@@ -2,37 +2,42 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import fs from 'fs';
 import path from 'path';
 
-interface Message {
+interface ChatMessage {
+  id: string;
+  sender: 'visitor' | 'admin';
+  text: string;
+  timestamp: string;
+}
+
+interface Conversation {
   id: string;
   visitorName: string;
   visitorEmail: string;
   visitorPhone: string;
-  visitorMessage: string;
-  adminReply?: string;
-  createdAt: string;
-  repliedAt?: string;
-  status: 'unread' | 'read' | 'replied';
+  messages: ChatMessage[];
+  lastUpdate: string;
+  status: 'active' | 'closed';
 }
 
-const messagesFile = path.join('/tmp', 'messages.json');
+const messagesFile = path.join('/tmp', 'conversations.json');
 
-function getMessages(): Message[] {
+function getConversations(): Conversation[] {
   try {
     if (fs.existsSync(messagesFile)) {
       const data = fs.readFileSync(messagesFile, 'utf-8');
       return JSON.parse(data);
     }
   } catch (error) {
-    console.error('Error reading messages:', error);
+    console.error('Error reading conversations:', error);
   }
   return [];
 }
 
-function saveMessages(messages: Message[]): void {
+function saveConversations(conversations: Conversation[]): void {
   try {
-    fs.writeFileSync(messagesFile, JSON.stringify(messages, null, 2));
+    fs.writeFileSync(messagesFile, JSON.stringify(conversations, null, 2));
   } catch (error) {
-    console.error('Error saving messages:', error);
+    console.error('Error saving conversations:', error);
   }
 }
 
@@ -40,70 +45,68 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
-  // GET: Retrieve all messages (admin only - requires password)
+  const conversations = getConversations();
+
+  // GET: Retrieve conversations
   if (req.method === 'GET') {
-    const { password } = req.query;
+    const { password, conversationId } = req.query;
     
-    // Simple password check (should be environment variable in production)
-    if (password !== process.env.ADMIN_PASSWORD) {
+    // If admin password provided, return all conversations
+    if (password === process.env.ADMIN_PASSWORD) {
+      return res.status(200).json(conversations);
+    }
+
+    // If only conversationId provided, return that specific conversation (for visitor)
+    if (conversationId) {
+      const conv = conversations.find(c => c.id === conversationId);
+      return conv ? res.status(200).json(conv) : res.status(404).json({ error: 'Not found' });
+    }
+
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  // POST: Add new message (visitor or admin)
+  if (req.method === 'POST') {
+    const { conversationId, visitorName, visitorEmail, visitorPhone, text, sender, password } = req.body;
+
+    let convIndex = conversations.findIndex(c => c.id === conversationId);
+
+    if (convIndex === -1 && sender === 'visitor') {
+      // Create new conversation
+      const newConv: Conversation = {
+        id: conversationId || Date.now().toString(),
+        visitorName: visitorName || 'Anonymous',
+        visitorEmail: visitorEmail || '',
+        visitorPhone: visitorPhone || '',
+        messages: [],
+        lastUpdate: new Date().toISOString(),
+        status: 'active',
+      };
+      conversations.push(newConv);
+      convIndex = conversations.length - 1;
+    }
+
+    if (convIndex === -1) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    // Security check for admin
+    if (sender === 'admin' && password !== process.env.ADMIN_PASSWORD) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const messages = getMessages();
-    return res.status(200).json(messages);
-  }
-
-  // POST: Add new message from visitor
-  if (req.method === 'POST') {
-    const { visitorName, visitorEmail, visitorPhone, visitorMessage } = req.body;
-
-    if (!visitorName || !visitorEmail || !visitorMessage) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const messages = getMessages();
-    const newMessage: Message = {
+    const newMessage: ChatMessage = {
       id: Date.now().toString(),
-      visitorName,
-      visitorEmail,
-      visitorPhone,
-      visitorMessage,
-      createdAt: new Date().toISOString(),
-      status: 'unread',
+      sender,
+      text,
+      timestamp: new Date().toISOString(),
     };
 
-    messages.push(newMessage);
-    saveMessages(messages);
+    conversations[convIndex].messages.push(newMessage);
+    conversations[convIndex].lastUpdate = new Date().toISOString();
+    saveConversations(conversations);
 
-    return res.status(200).json({ success: true, messageId: newMessage.id });
-  }
-
-  // PUT: Admin reply to message
-  if (req.method === 'PUT') {
-    const { password, messageId, adminReply } = req.body;
-
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
-    if (!messageId || !adminReply) {
-      return res.status(400).json({ error: 'Missing required fields' });
-    }
-
-    const messages = getMessages();
-    const messageIndex = messages.findIndex(m => m.id === messageId);
-
-    if (messageIndex === -1) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
-
-    messages[messageIndex].adminReply = adminReply;
-    messages[messageIndex].repliedAt = new Date().toISOString();
-    messages[messageIndex].status = 'replied';
-
-    saveMessages(messages);
-
-    return res.status(200).json({ success: true });
+    return res.status(200).json(conversations[convIndex]);
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
